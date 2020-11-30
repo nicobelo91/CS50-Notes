@@ -8,29 +8,29 @@ struct Note {
 
 class NoteManager {
     var database: OpaquePointer?
-    
+
     static let shared = NoteManager()
-    
+
     private init() {
     }
-    
+
     func connect() {
         if database != nil {
             return
         }
-        
+
         let databaseURL = try! FileManager.default.url(
             for: .documentDirectory,
             in: .userDomainMask,
             appropriateFor: nil,
             create: false
         ).appendingPathComponent("notes.sqlite")
-        
+
         if sqlite3_open(databaseURL.path, &database) != SQLITE_OK {
             print("Error opening database")
             return
         }
-        
+
         if sqlite3_exec(
             database,
             """
@@ -45,10 +45,10 @@ class NoteManager {
             print("Error creating table: \(String(cString: sqlite3_errmsg(database)!))")
         }
     }
-    
+
     func create() -> Int {
         connect()
-        
+
         var statement: OpaquePointer? = nil
         if sqlite3_prepare_v2(
             database,
@@ -64,14 +64,14 @@ class NoteManager {
         else {
             print("Error creating note insert statement")
         }
-        
+
         sqlite3_finalize(statement)
         return Int(sqlite3_last_insert_rowid(database))
     }
-    
+
     func getNotes() -> [Note] {
         connect()
-        
+
         var result: [Note] = []
         var statement: OpaquePointer? = nil
         if sqlite3_prepare_v2(database, "SELECT rowid, content FROM notes", -1, &statement, nil) == SQLITE_OK {
@@ -82,14 +82,14 @@ class NoteManager {
                 ))
             }
         }
-        
+
         sqlite3_finalize(statement)
         return result
     }
-    
+
     func saveNote(note: Note) {
         connect()
-        
+
         var statement: OpaquePointer? = nil
         if sqlite3_prepare_v2(
             database,
@@ -107,7 +107,29 @@ class NoteManager {
         else {
             print("Error creating note update statement")
         }
-        
+
         sqlite3_finalize(statement)
+    }
+
+    func delete(id: Int32) -> Bool {
+        connect()
+        var statement: OpaquePointer? = nil
+        if sqlite3_prepare_v2(database, "DELETE FROM notes WHERE rowid = ?", -1, &statement, nil) == SQLITE_OK {
+
+            sqlite3_bind_int(statement, 1, Int32(id))
+
+            if sqlite3_step(statement) == SQLITE_DONE {
+                  print("\nSuccessfully deleted row.")
+            } else {
+                print("\nCould not delete row.")
+                return false
+                }
+        } else {
+            print("\nDELETE statement could not be prepared")
+            return false
+            }
+
+        sqlite3_finalize(statement)
+        return true
     }
 }

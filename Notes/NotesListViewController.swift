@@ -10,6 +10,7 @@ class NotesListViewController: UITableViewController {
     
     func reload() {
         notes = NoteManager.shared.getNotes()
+        //NoteManager.shared.delete()
         tableView.reloadData()
     }
     
@@ -24,6 +25,17 @@ class NotesListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return notes.count
+    }
+    
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+                    let deleted = NoteManager.shared.delete(id: notes[indexPath.row].id)
+                    if deleted {
+                        notes.remove(at: indexPath.row)
+                        tableView.deleteRows(at: [indexPath], with: .fade)
+                        
+                    }
+                }
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
