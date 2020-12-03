@@ -20,7 +20,6 @@ class NoteViewController: UIViewController {
     
     @IBAction func deleteButtonPressed(_ sender: UIBarButtonItem) {
         let _ = NoteManager.shared.delete(id: note!.id)
-        //popViewController(animated: true)
-        
+        navigationController?.popViewController(animated: true)
     }
 }
